@@ -1,0 +1,21 @@
+{
+	"id": "chatcmpl-6pjGQpZMKT0eluchqyx7I3F2OJ2pw",
+	"object": "chat.completion",
+	"created": 1677786742,
+	"model": "gpt-3.5-turbo-0301",
+	"usage": {
+		"prompt_tokens": 48,
+		"completion_tokens": 347,
+		"total_tokens": 395
+	},
+	"choices": [
+		{
+			"message": {
+				"role": "assistant",
+				"content": "\n\nAs an AI language model, chatGPT can be trained to respond to specific queries based on predefined criteria. To set screening criteria for the queries to your Q&A app, you can follow these steps:\n\n1. Identify the specific topics or categories that you want to screen for. For example, if your Q&A app is focused on health and wellness, you may want to screen queries related to medical advice, nutrition, fitness, and mental health.\n\n2. Develop a set of rules or guidelines for each topic or category that will determine whether a query is appropriate for your app. For example, you may want to screen out queries that are too general or vague, that contain inappropriate language, or that seek personal or sensitive information.\n\n3. Use natural language processing (NLP) techniques to analyze the text of each query and determine whether it meets your screening criteria. This may involve using machine learning algorithms to train chatGPT to recognize certain patterns or keywords in the text, or using rule-based systems to identify specific phrases or structures that are indicative of inappropriate queries.\n\n4. Based on the results of your screening, you can then decide how to respond to each query. If a query meets your criteria, you can pass it on to chatGPT to provide a relevant and helpful response. If a query does not meet your criteria, you can either flag it for review by a human moderator or provide a generic response that explains why the query cannot be answered.\n\nOverall, setting screening criteria for your Q&A app is an important step in ensuring that your users receive accurate and helpful information. By leveraging the power of chatGPT and NLP techniques, you can create a more effective and reliable Q&A experience for your users."
+			},
+			"finish_reason": "stop",
+			"index": 0
+		}
+	]
+}
