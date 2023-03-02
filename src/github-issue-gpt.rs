@@ -12,7 +12,7 @@ use std::env;
 pub async fn run() -> anyhow::Result<()> {
     // listen_to_event("jaykchen", "vitesse-lite", vec!["fork"], handler).await;
 
-    let api_token: String = env::var("OPENAI-API-TOKEN").expect("token not found");
+    let api_token: String = env::var("OPENAI_API_TOKEN").expect("token not found");
 
     let prompt = r#"Please reply to me with the answer "You have abused Q&A api""#;
 
