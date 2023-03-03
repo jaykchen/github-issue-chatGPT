@@ -10,7 +10,7 @@ use std::env;
 #[no_mangle]
 #[tokio::main(flavor = "current_thread")]
 pub async fn run() -> anyhow::Result<()> {
-    listen_to_event("jaykchen", "vitesse-lite", vec!["fork"], handler).await;
+    listen_to_event("jaykchen", "vitesse-lite", vec!["created"], handler).await;
 
     Ok(())
 }
@@ -18,11 +18,11 @@ pub async fn run() -> anyhow::Result<()> {
 pub async fn get_answer(query: String) -> String {
     let api_token: String = env::var("OPENAI_API_TOKEN").expect("token not found");
 
-    let prompt = r#"Please reply to me with the answer "You have abused Q&A api""#;
+    // let prompt = r#"Please reply to me with the answer "You have abused Q&A api""#;
 
     let params = serde_json::json!({
                 "model": "gpt-3.5-turbo",
-        "messages": [{"role": "user", "content": prompt}],
+        "messages": [{"role": "user", "content": query}],
         "temperature": 0.7,
         "top_p": 1,
         "n": 1,
@@ -37,10 +37,6 @@ pub async fn get_answer(query: String) -> String {
 
     let addr = Uri::try_from("https://api.openai.com/v1/chat/completions").unwrap();
     let mut writer = Vec::new();
-    // let stream = TcpStream::connect((addr.host().unwrap(), addr.corr_port())).unwrap();
-    // let mut stream = tls::Config::default()
-    //     .connect(addr.host().unwrap_or(""), stream)
-    //     .unwrap();
 
     let bearer_token = format!("Bearer {}", api_token);
     let _ = Request::new(&addr)
