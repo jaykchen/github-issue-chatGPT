@@ -97,6 +97,9 @@ async fn handler(payload: EventPayload) {
         let gpt_answer = get_answer(comment).await;
 
         let id = comment_id.to_string().parse::<u64>().unwrap_or(0);
-        octocrab.issues(owner, repo).create_comment(id, gpt_answer);
+        octocrab
+            .issues(owner, repo)
+            .create_comment(id, gpt_answer)
+            .await;
     }
 }
