@@ -85,13 +85,14 @@ async fn handler(payload: EventPayload) {
         let comment_id = comment_obj.id;
         // let query_str = format!("/repos/{owner}/{repo}/issues/comments/{comment_id}");
 
-        let comment: String = octocrab
-            .issues(owner, repo)
-            .get_comment(comment_id)
-            .await
-            .unwrap()
-            .body_text
-            .unwrap_or("no comment obtained".to_string());
+        let comment = comment_obj.body.expect("possibly empty comment");
+        // let comment: String = octocrab
+        //     .issues(owner, repo)
+        //     .get_comment(comment_id)
+        //     .await
+        //     .unwrap()
+        //     .body_text
+        //     .unwrap_or("no comment obtained".to_string());
 
         let gpt_answer = get_answer(comment).await;
 
