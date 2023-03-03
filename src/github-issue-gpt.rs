@@ -1,17 +1,20 @@
+use github_flows::{get_octo, listen_to_event, EventPayload};
 use http_req::{
     request::{Method, Request},
     uri::Uri,
 };
-use std::convert::TryFrom;
-// use github_flows::{get_octo, listen_to_event, EventPayload};
 use serde::{Deserialize, Serialize};
-use slack_flows::send_message_to_channel;
+use std::convert::TryFrom;
 use std::env;
 #[no_mangle]
 #[tokio::main(flavor = "current_thread")]
 pub async fn run() -> anyhow::Result<()> {
-    // listen_to_event("jaykchen", "vitesse-lite", vec!["fork"], handler).await;
+    listen_to_event("jaykchen", "vitesse-lite", vec!["fork"], handler).await;
 
+    Ok(())
+}
+
+pub async fn get_answer(query: String) -> String {
     let api_token: String = env::var("OPENAI_API_TOKEN").expect("token not found");
 
     let prompt = r#"Please reply to me with the answer "You have abused Q&A api""#;
@@ -50,9 +53,7 @@ pub async fn run() -> anyhow::Result<()> {
 
     let text = String::from_utf8(writer).unwrap_or("failed to parse response".to_string());
     let raw: ChatResponse = serde_json::from_str(&text).unwrap();
-    let message_content = raw.choices[0].message.content.to_string();
-    send_message_to_channel("ik8", "general", message_content);
-    Ok(())
+    raw.choices[0].message.content.to_string()
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -73,27 +74,28 @@ pub struct Message {
     content: String,
 }
 
-// async fn handler(payload: EventPayload) {
+async fn handler(payload: EventPayload) {
+    let owner = "jaykchen";
+    let repo = "vitesse-lite";
 
-//     let octocrab = get_octo(None);
+    let octocrab = get_octo(None);
 
-//     let repo = octocrab
-//         .repos("jaykchen", "vitesse-lite")
-//         .get()
-//         .await
-//         .expect("repo not obtained");
+    if let EventPayload::IssueCommentEvent(e) = payload {
+        let comment_obj = e.comment;
+        let comment_id = comment_obj.id;
+        // let query_str = format!("/repos/{owner}/{repo}/issues/comments/{comment_id}");
 
-//     let full_name = repo.full_name.expect("full_name not obtained");
-//     let visibility = repo.visibility.expect("visibility not obtained");
+        let comment: String = octocrab
+            .issues(owner, repo)
+            .get_comment(comment_id)
+            .await
+            .unwrap()
+            .body_text
+            .unwrap_or("no comment obtained".to_string());
 
-//     if let EventPayload::ForkEvent(e) = payload {
-//         let forkee = e.forkee;
-//         let forkee_name = forkee.owner.expect("no owner field").login;
-//         let html_url = forkee.html_url.expect("no html_url field").to_string();
+        let gpt_answer = get_answer(comment).await;
 
-//         let text = format!(
-//             "{} forked your {}({})!\n{}",
-//             forkee_name, full_name, visibility, html_url
-//         );
-//     }
-// }
+        let id = comment_id.to_string().parse::<u64>().unwrap_or(0);
+        octocrab.issues(owner, repo).create_comment(id, gpt_answer);
+    }
+}
