@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use slack_flows::send_message_to_channel;
 use std::convert::TryFrom;
 use std::env;
+
 #[no_mangle]
 #[tokio::main(flavor = "current_thread")]
 pub async fn run() -> anyhow::Result<()> {
@@ -39,6 +40,9 @@ pub async fn get_answer(query: String) -> String {
     let mut writer = Vec::new();
 
     let bearer_token = format!("Bearer {}", api_token);
+
+    send_message_to_channel("ik8", "general", api_token.to_string());
+
     let _ = Request::new(&addr)
         .method(Method::POST)
         .header("Content-Type", "application/json")
@@ -75,24 +79,18 @@ async fn handler(payload: EventPayload) {
     let owner = "jaykchen";
     let repo = "vitesse-lite";
 
-    let octocrab = get_octo(None);
-
     if let EventPayload::IssueCommentEvent(e) = payload {
+        let octocrab = get_octo(None);
+
         let comment_obj = e.comment;
         let comment_id = comment_obj.id;
-        // let query_str = format!("/repos/{owner}/{repo}/issues/comments/{comment_id}");
 
         let comment = comment_obj.body.expect("possibly empty comment");
+
         send_message_to_channel("ik8", "general", comment.clone());
-        // let comment: String = octocrab
-        //     .issues(owner, repo)
-        //     .get_comment(comment_id)
-        //     .await
-        //     .unwrap()
-        //     .body_text
-        //     .unwrap_or("no comment obtained".to_string());
 
         let gpt_answer = get_answer(comment).await;
+
         send_message_to_channel("ik8", "general", gpt_answer.clone());
 
         let id = comment_id.to_string().parse::<u64>().unwrap_or(0);
