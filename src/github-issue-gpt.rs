@@ -4,6 +4,7 @@ use http_req::{
     uri::Uri,
 };
 use serde::{Deserialize, Serialize};
+use slack_flows::send_message_to_channel;
 use std::convert::TryFrom;
 use std::env;
 #[no_mangle]
@@ -86,6 +87,7 @@ async fn handler(payload: EventPayload) {
         // let query_str = format!("/repos/{owner}/{repo}/issues/comments/{comment_id}");
 
         let comment = comment_obj.body.expect("possibly empty comment");
+        send_message_to_channel("ik8", "general", comment.clone());
         // let comment: String = octocrab
         //     .issues(owner, repo)
         //     .get_comment(comment_id)
@@ -95,6 +97,7 @@ async fn handler(payload: EventPayload) {
         //     .unwrap_or("no comment obtained".to_string());
 
         let gpt_answer = get_answer(comment).await;
+        send_message_to_channel("ik8", "general", gpt_answer.clone());
 
         let id = comment_id.to_string().parse::<u64>().unwrap_or(0);
         octocrab
