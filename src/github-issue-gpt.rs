@@ -11,7 +11,13 @@ use std::env;
 #[no_mangle]
 #[tokio::main(flavor = "current_thread")]
 pub async fn run() -> anyhow::Result<()> {
-    listen_to_event("jaykchen", "vitesse-lite", vec!["created"], handler).await;
+    listen_to_event(
+        "jaykchen",
+        "vitesse-lite",
+        vec!["issue_comment", "issues", "created"],
+        handler,
+    )
+    .await;
 
     Ok(())
 }
@@ -80,7 +86,7 @@ async fn handler(payload: EventPayload) {
     let repo = "vitesse-lite";
 
     if let EventPayload::IssueCommentEvent(e) = payload {
-        let octocrab = get_octo(None);
+        // let octocrab = get_octo(None);
 
         let comment_obj = e.comment;
         let comment_id = comment_obj.id;
@@ -93,10 +99,44 @@ async fn handler(payload: EventPayload) {
 
         send_message_to_channel("ik8", "general", gpt_answer.clone());
 
-        let id = comment_id.to_string().parse::<u64>().unwrap_or(0);
-        octocrab
-            .issues(owner, repo)
-            .create_comment(id, gpt_answer)
-            .await;
+        // let id = comment_id.to_string().parse::<u64>().unwrap_or(0);
+        // octocrab
+        //     .issues(owner, repo)
+        //     .create_comment(id, gpt_answer)
+        //     .await;
+
+        // let mut writer = Vec::new();
+        // let query_str =
+        //     format!("repos/{owner}/{repo}/issues/{issue_number}/comments/{comment_id}/replies");
+        // let addr = Uri::try_from(query_str).unwrap();
+
+        // let body = serde_json::json!({ "body": gpt_answer });
+
+        // let _ = Request::new(&addr)
+        //     .method(Method::POST)
+        //     .header("Content-Type", "application/vnd.github.v3+json")
+        //     .header("Authorization", &bearer_token)
+        //     .header("Content-Length", &body.len())
+        //     .body(&body)
+        //     .send(&mut writer)
+        //     .unwrap();
     }
 }
+
+// async fn reply_comment(reply: String) {
+//     let mut writer = Vec::new();
+//     let query_str =
+//         format!("repos/{owner}/{repo}/issues/{issue_number}/comments/{comment_id}/replies");
+//     let addr = Uri::try_from(query_str).unwrap();
+
+//     let body = serde_json!({ "body": reply });
+
+//     let _ = Request::new(&addr)
+//         .method(Method::POST)
+//         .header("Content-Type", "application/vnd.github.v3+json")
+//         .header("Authorization", &bearer_token)
+//         .header("Content-Length", &body.len())
+//         .body(&body)
+//         .send(&mut writer)
+//         .unwrap();
+// }
