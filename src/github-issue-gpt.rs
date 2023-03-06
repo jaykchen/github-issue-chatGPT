@@ -56,7 +56,7 @@ pub fn chat_completion(prompt: &str) -> Option<String> {
 
     let params = serde_json::json!({
         "model": "text-davinci-003",
-        "prompt": prompt,
+        "prompt": "Say this is a test",
         "max_tokens": 512,
         "temperature": 0.7,
         "top_p": 1,
