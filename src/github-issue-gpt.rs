@@ -57,8 +57,8 @@ pub fn chat_completion(prompt: &str) -> Option<String> {
     let params = serde_json::json!({
         "model": "text-davinci-003",
         "prompt": prompt,
-        "max_tokens": 7,
-        "temperature": 0,
+        "max_tokens": 512,
+        "temperature": 0.7,
         "top_p": 1,
         "n": 1,
         "stream": false,
@@ -80,9 +80,10 @@ pub fn chat_completion(prompt: &str) -> Option<String> {
             if !res.status_code().is_success() {
                 send_message_to_channel("ik8", "general", res.status_code().to_string());
             }
-            let raw: ChatResponse = serde_json::from_slice(&writer).unwrap();
-            let answer = raw.choices[0].text.clone();
-            return Some(answer);
+            return Some(String::from_utf8(writer).unwrap());
+            // let raw: ChatResponse = serde_json::from_slice(&writer).unwrap();
+            // let answer = raw.choices[0].text.clone();
+            // return Some(answer);
             // serde_json::from_str(&writer).ok()
         }
         Err(_) => {}
