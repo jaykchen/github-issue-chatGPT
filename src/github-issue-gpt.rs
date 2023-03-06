@@ -63,7 +63,7 @@ pub fn chat_completion(prompt: &str) -> Option<String> {
         "n": 1,
         "stream": false,
         "logprobs": null,
-        "stop": "\n"
+        "stop": "tl;dr"
     });
     let uri = Uri::try_from("https://api.openai.com/v1/completions").unwrap();
     let bearer_token = format!("Bearer {}", api_token);
