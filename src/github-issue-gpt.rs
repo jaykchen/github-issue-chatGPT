@@ -80,7 +80,9 @@ pub fn chat_completion(prompt: &str) -> Option<String> {
             if !res.status_code().is_success() {
                 send_message_to_channel("ik8", "general", res.status_code().to_string());
             }
-            return Some(String::from_utf8(writer).unwrap());
+            let text = String::from_utf8(writer).unwrap();
+            send_message_to_channel("ik8", "general", text.to_string());
+            return Some(text);
             // let raw: ChatResponse = serde_json::from_slice(&writer).unwrap();
             // let answer = raw.choices[0].text.clone();
             // return Some(answer);
