@@ -1,10 +1,9 @@
-use flowsnet_platform_sdk::write_error_log;
+use dotenv::dotenv;
 use github_flows::{get_octo, listen_to_event, EventPayload};
 use http_req::{
     request::{Method, Request},
     uri::Uri,
 };
-use openai_flows::chat_completion;
 use serde::{Deserialize, Serialize};
 use slack_flows::send_message_to_channel;
 use std::convert::TryFrom;
@@ -34,12 +33,8 @@ async fn handler(payload: EventPayload) {
         EventPayload::IssueCommentEvent(e) => {
             if e.comment.user.r#type != "Bot" {
                 if let Some(b) = e.comment.body {
-                    if let Some(r) =
-                        chat_completion("jaykchen", &format!("issue#{}", e.issue.number), &b)
-                    {
-                        if let Err(e) = issues.create_comment(e.issue.number, r.choice).await {
-                            write_error_log!(e.to_string());
-                        }
+                    if let Some(r) = chat_completion(&b) {
+                        send_message_to_channel("ik8", "general", r);
                     }
                 }
             }
@@ -47,58 +42,44 @@ async fn handler(payload: EventPayload) {
         _ => (),
     };
 }
-// if let EventPayload::IssueCommentEvent(e) = payload {
-//     // let octocrab = get_octo(None);
 
-//     let comment_obj = e.comment;
-//     let comment_id = comment_obj.id;
-//     let issue_number = e.issue.number;
-//     let comment = comment_obj.body.expect("possibly empty comment");
+pub fn chat_completion(prompt: &str) -> Option<String> {
+    dotenv().ok();
+    let api_token = env::var("OPENAI_API_TOKEN").unwrap();
+    let mut writer = Vec::new();
 
-//     send_message_to_channel("ik8", "general", comment.clone());
+    let params = serde_json::json!({
+        "model": "text-davinci-003",
+        "prompt": prompt,
+        "max_tokens": 7,
+        "temperature": 0,
+        "top_p": 1,
+        "n": 1,
+        "stream": false,
+        "logprobs": null,
+        "stop": "\n"
+    });
+    let uri = Uri::try_from("https://api.openai.com/v1/completions").unwrap();
+    let bearer_token = format!("Bearer {}", api_token);
+    let body = serde_json::to_vec(&params).unwrap_or_default();
+    match Request::new(&uri)
+        .method(Method::POST)
+        .header("Authorization", &bearer_token)
+        .header("Content-Type", "application/json")
+        .header("Content-Length", &body.len())
+        .body(&body)
+        .send(&mut writer)
+    {
+        Ok(res) => {
+            if !res.status_code().is_success() {
+                send_message_to_channel("ik8", "general", res.status_code().to_string());
+            }
+            let res = String::from_utf8(writer).expect("failed to parse response");
+            return Some(res);
+            // serde_json::from_str(&writer).ok()
+        }
+        Err(_) => {}
+    };
 
-//     if let Some(gpt_answer) =
-//         chat_completion("jaykchen", &format!("issue#{}", issue_number), &comment)
-//     {
-//         send_message_to_channel("ik8", "general", gpt_answer.choice);
-//     }
-
-// let id = comment_id.to_string().parse::<u64>().unwrap_or(0);
-// octocrab
-//     .issues(owner, repo)
-//     .create_comment(id, gpt_answer)
-//     .await;
-
-// let mut writer = Vec::new();
-// let query_str =
-//     format!("repos/{owner}/{repo}/issues/{issue_number}/comments/{comment_id}/replies");
-// let addr = Uri::try_from(query_str).unwrap();
-
-// let body = serde_json::json!({ "body": gpt_answer });
-
-// let _ = Request::new(&addr)
-//     .method(Method::POST)
-//     .header("Content-Type", "application/vnd.github.v3+json")
-//     .header("Authorization", &bearer_token)
-//     .header("Content-Length", &body.len())
-//     .body(&body)
-//     .send(&mut writer)
-//     .unwrap();
-
-// async fn reply_comment(reply: String) {
-//     let mut writer = Vec::new();
-//     let query_str =
-//         format!("repos/{owner}/{repo}/issues/{issue_number}/comments/{comment_id}/replies");
-//     let addr = Uri::try_from(query_str).unwrap();
-
-//     let body = serde_json!({ "body": reply });
-
-//     let _ = Request::new(&addr)
-//         .method(Method::POST)
-//         .header("Content-Type", "application/vnd.github.v3+json")
-//         .header("Authorization", &bearer_token)
-//         .header("Content-Length", &body.len())
-//         .body(&body)
-//         .send(&mut writer)
-//         .unwrap();
-// }
+    None
+}
