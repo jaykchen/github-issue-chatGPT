@@ -5,7 +5,6 @@ use http_req::{
     uri::Uri,
 };
 use serde::{Deserialize, Serialize};
-use slack_flows::send_message_to_channel;
 use std::borrow::Cow;
 use std::convert::TryFrom;
 use std::env;
@@ -40,7 +39,7 @@ async fn handler(payload: EventPayload) {
                 if let Some(b) = e.comment.body {
                     let encoded = encode(&b);
                     if let Some(r) = chat_completion(&encoded) {
-                        send_message_to_channel("ik8", "general", r);
+                        // do something with the response
                     }
                 }
             }
@@ -77,15 +76,12 @@ pub fn chat_completion(prompt: &str) -> Option<String> {
     {
         Ok(res) => {
             if !res.status_code().is_success() {
-                send_message_to_channel("ik8", "general", res.status_code().to_string());
+                return Some(res.status_code().to_string());
             }
-            let text = String::from_utf8(writer.clone()).unwrap();
-            send_message_to_channel("ik8", "general", text.to_string());
 
             let raw: ChatResponse = serde_json::from_slice(&writer).unwrap();
             let answer = raw.choices[0].message.content.clone();
             return Some(answer);
-            // serde_json::from_str(&writer).ok()
         }
         Err(_) => {}
     };
