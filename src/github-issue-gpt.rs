@@ -55,17 +55,16 @@ pub fn chat_completion(prompt: &str) -> Option<String> {
     let mut writer = Vec::new();
 
     let params = serde_json::json!({
-        "model": "text-davinci-003",
-        "prompt": prompt,
+        "model": "gpt-3.5-turbo",
+        "messages": [{"role": "user", "content": prompt}],
         "max_tokens": 512,
         "temperature": 0.7,
         "top_p": 1,
         "n": 1,
         "stream": false,
-        "logprobs": null,
         "stop": "tl;dr"
     });
-    let uri = Uri::try_from("https://api.openai.com/v1/completions").unwrap();
+    let uri = Uri::try_from("https://api.openai.com/v1/chat/completions").unwrap();
     let bearer_token = format!("Bearer {}", api_token);
     let body = serde_json::to_vec(&params).unwrap_or_default();
     match Request::new(&uri)
@@ -84,8 +83,7 @@ pub fn chat_completion(prompt: &str) -> Option<String> {
             send_message_to_channel("ik8", "general", text.to_string());
 
             let raw: ChatResponse = serde_json::from_slice(&writer).unwrap();
-            let answer = raw.choices[0].text.clone();
-            send_message_to_channel("ik8", "general", answer.to_string());
+            let answer = raw.choices[0].message.content.clone();
             return Some(answer);
             // serde_json::from_str(&writer).ok()
         }
@@ -103,20 +101,15 @@ pub struct ChatResponse {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Choice {
-    text: String,
+    message: Message,
     index: i64,
 }
 
-// pub struct Choice {
-//     message: Message,
-//     index: i64,
-// }
-
-// #[derive(Serialize, Deserialize, Debug)]
-// pub struct Message {
-//     role: String,
-//     content: String,
-// }
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Message {
+    role: String,
+    content: String,
+}
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Ord, PartialOrd)]
 #[repr(transparent)]
