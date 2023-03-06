@@ -74,8 +74,9 @@ pub fn chat_completion(prompt: &str) -> Option<String> {
             if !res.status_code().is_success() {
                 send_message_to_channel("ik8", "general", res.status_code().to_string());
             }
-            let res = String::from_utf8(writer).expect("failed to parse response");
-            return Some(res);
+            let raw: ChatResponse = serde_json::from_slice(&writer).unwrap();
+            let answer = raw.choices[0].text.clone();
+            return Some(answer);
             // serde_json::from_str(&writer).ok()
         }
         Err(_) => {}
@@ -83,3 +84,26 @@ pub fn chat_completion(prompt: &str) -> Option<String> {
 
     None
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ChatResponse {
+    created: i64,
+    choices: Vec<Choice>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Choice {
+    text: String,
+    index: i64,
+}
+
+// pub struct Choice {
+//     message: Message,
+//     index: i64,
+// }
+
+// #[derive(Serialize, Deserialize, Debug)]
+// pub struct Message {
+//     role: String,
+//     content: String,
+// }
